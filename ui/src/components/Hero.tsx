@@ -4,8 +4,11 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import WeatherLogo from "./WeatherLogo";
 import heroBg from "@/assets/hero-bg.jpg";
 import HowItWorksDialog from "./HowItWorksDialog";
+import { useState } from "react";
 
 const Hero = () => {
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Wallet Connection - Top Right */}
@@ -13,7 +16,7 @@ const Hero = () => {
         <ConnectButton />
       </div>
       {/* Background */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${heroBg})` }}
       >
@@ -43,8 +46,8 @@ const Hero = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <HowItWorksDialog>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               variant="outline"
               className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
             >
@@ -52,20 +55,32 @@ const Hero = () => {
               How It Works
             </Button>
           </HowItWorksDialog>
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            Start Predicting
+          </Button>
         </div>
 
         {/* Stats */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
           <div className="backdrop-blur-md bg-card/30 rounded-lg p-6 border border-primary/20 hover:border-primary/50 transition-all duration-300">
-            <div className="text-3xl font-bold text-primary mb-2">2,547</div>
+            <div className="text-3xl font-bold text-primary mb-2">
+              {isWalletConnected ? "2,547" : "Loading..."}
+            </div>
             <div className="text-muted-foreground">Active Predictions</div>
           </div>
           <div className="backdrop-blur-md bg-card/30 rounded-lg p-6 border border-secondary/20 hover:border-secondary/50 transition-all duration-300">
-            <div className="text-3xl font-bold text-secondary mb-2">$1.2M</div>
+            <div className="text-3xl font-bold text-secondary mb-2">
+              {isWalletConnected ? "$1.2M" : "Loading..."}
+            </div>
             <div className="text-muted-foreground">Total Staked</div>
           </div>
           <div className="backdrop-blur-md bg-card/30 rounded-lg p-6 border border-accent/20 hover:border-accent/50 transition-all duration-300">
-            <div className="text-3xl font-bold text-accent mb-2">98.4%</div>
+            <div className="text-3xl font-bold text-accent mb-2">
+              {isWalletConnected ? "98.4%" : "Loading..."}
+            </div>
             <div className="text-muted-foreground">Accuracy Rate</div>
           </div>
         </div>
