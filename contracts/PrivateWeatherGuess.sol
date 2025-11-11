@@ -70,6 +70,27 @@ contract PrivateWeatherGuess is SepoliaConfig {
     event Unpaused(address account);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
+    // Modifiers
+    modifier onlyOwner() {
+        require(owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    modifier onlyPredictor(uint256 predictionId) {
+        require(predictions[predictionId].predictor == msg.sender, "Only prediction owner can perform this action");
+        _;
+    }
+
+    modifier whenNotPaused() {
+        require(!paused, "Contract is paused");
+        _;
+    }
+
+    modifier whenPaused() {
+        require(paused, "Contract is not paused");
+        _;
+    }
+
     constructor() {
         owner = msg.sender;
         paused = false;
@@ -275,7 +296,7 @@ contract PrivateWeatherGuess is SepoliaConfig {
     /// @param predictionId Prediction ID
     /// @param actualTemperature Actual temperature in Celsius (multiplied by 10, e.g., 25.5°C = 255)
     /// @dev This function should be called by owner after target date has passed
-    function revealPrediction(uint256 predictionId, int256 actualTemperature) external onlyOwner {
+    function revealPrediction(uint256 predictionId, int256 actualTemperature) external onlyOwner whenNotPaused {
         Prediction storage prediction = predictions[predictionId];
         require(prediction.isActive, "Prediction does not exist");
         require(!prediction.isRevealed, "Prediction already revealed");
@@ -304,7 +325,7 @@ contract PrivateWeatherGuess is SepoliaConfig {
     /// @notice Update leaderboard accuracy after decryption (only owner)
     /// @param predictionId Prediction ID
     /// @param accuracy Accuracy score (0-10000, where 10000 = 100.00%)
-    function updateLeaderboardAccuracy(uint256 predictionId, uint256 accuracy) external onlyOwner {
+    function updateLeaderboardAccuracy(uint256 predictionId, uint256 accuracy) external onlyOwner whenNotPaused {
         require(predictions[predictionId].isRevealed, "Prediction must be revealed first");
         require(accuracy <= 10000, "Accuracy must be between 0 and 10000");
         
@@ -356,6 +377,13 @@ contract PrivateWeatherGuess is SepoliaConfig {
     function unpause() external onlyOwner whenPaused {
         paused = false;
         emit Unpaused(msg.sender);
+    }
+
+    /// @notice Transfer ownership to new owner (only owner)
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "New owner cannot be zero address");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 
     /// @notice Transfer ownership to new owner (only owner)
