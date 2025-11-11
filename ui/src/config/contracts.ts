@@ -8,7 +8,7 @@ export const CONTRACT_ADDRESSES = {
   31337: '0x5FbDB2315678afecb367f032d93F642f64180aa3', // Deployed to localhost
 
   // Sepolia testnet (will be updated after deployment)
-  11155111: '', // To be filled after sepolia deployment
+  11155111: '0x1234567890123456789012345678901234567890', // Placeholder for sepolia
 } as const;
 
 // Contract factory for deployment
@@ -25,4 +25,11 @@ export const getContractAddress = (chainId: number): string | null => {
 
 // Contract ABI - extract from factory
 export const CONTRACT_ABI = PrivateWeatherGuess__factory.abi;
+
+// Contract event names
+export const CONTRACT_EVENTS = {
+  PREDICTION_SUBMITTED: 'PredictionSubmitted',
+  PREDICTION_REVEALED: 'PredictionRevealed',
+  LEADERBOARD_UPDATED: 'LeaderboardUpdated',
+} as const;
 

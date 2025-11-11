@@ -1,5 +1,6 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { mainnet, sepolia, hardhat } from 'wagmi/chains';
+import { http } from 'wagmi';
 
 export const config = getDefaultConfig({
   appName: 'Private Weather Guess',
@@ -18,5 +19,9 @@ export const config = getDefaultConfig({
     },
     sepolia,
   ],
+  transports: {
+    [hardhat.id]: http(),
+    [sepolia.id]: http(),
+  },
   ssr: false,
 });

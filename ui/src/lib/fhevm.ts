@@ -1,5 +1,6 @@
 // FHEVM SDK utilities for frontend
 import { ethers, JsonRpcProvider } from "ethers";
+import React, { useEffect } from "react";
 
 // Import @zama-fhe/relayer-sdk (dynamic import for Sepolia only)
 // For localhost, we use @fhevm/mock-utils instead
@@ -20,6 +21,27 @@ export interface EncryptedInput {
 let fhevmInstance: FhevmInstance | null = null;
 let isSDKInitialized = false;
 let lastChainId: number | null = null; // Track the chainId used to create fhevmInstance
+
+// React hook for FHEVM integration
+export function useFHEVM() {
+  const [isReady, setIsReady] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await initializeFHEVM();
+        setIsReady(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to initialize FHEVM');
+      }
+    };
+
+    init();
+  }, []);
+
+  return { isReady, error, instance: fhevmInstance };
+}
 
 /**
  * Initialize FHEVM instance
