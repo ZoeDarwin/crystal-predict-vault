@@ -4,10 +4,108 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import WeatherLogo from "./WeatherLogo";
 import heroBg from "@/assets/hero-bg.jpg";
 import HowItWorksDialog from "./HowItWorksDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const Hero = () => {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [bgImageLoaded, setBgImageLoaded] = useState(false);
+  const [bgImageError, setBgImageError] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
+  const [componentError, setComponentError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Handle background image loading
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setBgImageLoaded(true);
+    img.onerror = () => {
+      setBgImageError(true);
+      toast({
+        title: "Background Loading Error",
+        description: "Failed to load background image. Using fallback.",
+        variant: "destructive",
+      });
+    };
+    img.src = heroBg;
+  }, [toast]);
+
+  // Monitor wallet connection status
+  useEffect(() => {
+    const checkWalletConnection = () => {
+      if (typeof window !== 'undefined' && window.ethereum) {
+        window.ethereum.request({ method: 'eth_accounts' })
+          .then((accounts: string[]) => {
+            setIsWalletConnected(accounts.length > 0);
+          })
+          .catch((error: any) => {
+            console.error('Wallet connection check failed:', error);
+            toast({
+              title: "Wallet Connection Error",
+              description: "Failed to check wallet connection status.",
+              variant: "destructive",
+            });
+          });
+      }
+    };
+
+    checkWalletConnection();
+
+    // Listen for account changes
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+        setIsWalletConnected(accounts.length > 0);
+        if (accounts.length === 0) {
+          toast({
+            title: "Wallet Disconnected",
+            description: "Please reconnect your wallet to continue.",
+            variant: "destructive",
+          });
+        }
+      });
+
+      window.ethereum.on('chainChanged', () => {
+        window.location.reload();
+      });
+    }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeAllListeners('accountsChanged');
+        window.ethereum.removeAllListeners('chainChanged');
+      }
+    };
+  }, [toast]);
+
+  // Handle network errors
+  useEffect(() => {
+    const handleOnline = () => {
+      setNetworkError(false);
+      toast({
+        title: "Connection Restored",
+        description: "Network connection has been restored.",
+      });
+    };
+
+    const handleOffline = () => {
+      setNetworkError(true);
+      toast({
+        title: "Network Error",
+        description: "Network connection lost. Please check your internet.",
+        variant: "destructive",
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [toast]);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -17,14 +115,40 @@ const Hero = () => {
       </div>
       {/* Background */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroBg})` }}
+        className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
+          bgImageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          backgroundImage: bgImageError ? 'none' : `url(${heroBg})`,
+          backgroundColor: bgImageError ? '#1a1a2e' : 'transparent'
+        }}
       >
         <div className="absolute inset-0 bg-gradient-primary opacity-80" />
+        {bgImageError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-white/50 text-center">
+              <div className="text-6xl mb-4">🌤️</div>
+              <div className="text-lg">Weather Prediction Background</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Animated grid overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+
+      {/* Error Display */}
+      {(networkError || componentError) && (
+        <div className="absolute top-20 left-4 right-4 z-40">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {networkError && "Network connection issue detected. Some features may not work properly."}
+              {componentError && `Component error: ${componentError}`}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
