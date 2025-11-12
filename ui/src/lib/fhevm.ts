@@ -1,5 +1,5 @@
 // FHEVM SDK utilities for frontend
-import { ethers, JsonRpcProvider } from "ethers";
+import { ethers, JsonRpcProvider, BrowserProvider } from "ethers";
 import React, { useEffect } from "react";
 
 // Import @zama-fhe/relayer-sdk (dynamic import for Sepolia only)
@@ -21,26 +21,153 @@ export interface EncryptedInput {
 let fhevmInstance: FhevmInstance | null = null;
 let isSDKInitialized = false;
 let lastChainId: number | null = null; // Track the chainId used to create fhevmInstance
+let contractEventListeners: any[] = []; // Track active event listeners
 
-// React hook for FHEVM integration
+// React hook for FHEVM integration with event listeners
 export function useFHEVM() {
   const [isReady, setIsReady] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [networkStatus, setNetworkStatus] = React.useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const [blockNumber, setBlockNumber] = React.useState<number | null>(null);
 
   useEffect(() => {
     const init = async () => {
       try {
         await initializeFHEVM();
         setIsReady(true);
+        setNetworkStatus('connected');
+
+        // Set up blockchain event listeners
+        setupBlockchainListeners();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to initialize FHEVM');
+        setNetworkStatus('disconnected');
       }
     };
 
     init();
+
+    // Cleanup function
+    return () => {
+      cleanupEventListeners();
+    };
   }, []);
 
-  return { isReady, error, instance: fhevmInstance };
+  const setupBlockchainListeners = () => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      // Listen for new blocks
+      const blockListener = (blockNumber: string) => {
+        setBlockNumber(parseInt(blockNumber, 16));
+      };
+      window.ethereum.on('block', blockListener);
+      contractEventListeners.push({ type: 'block', listener: blockListener });
+
+      // Listen for network changes
+      const networkListener = (networkId: string) => {
+        console.log('[FHEVM] Network changed:', networkId);
+        // Reinitialize FHEVM on network change
+        setNetworkStatus('connecting');
+        initializeFHEVM().then(() => {
+          setNetworkStatus('connected');
+        }).catch(() => {
+          setNetworkStatus('disconnected');
+        });
+      };
+      window.ethereum.on('networkChanged', networkListener);
+      contractEventListeners.push({ type: 'networkChanged', listener: networkListener });
+
+      // Listen for account changes
+      const accountsListener = (accounts: string[]) => {
+        console.log('[FHEVM] Accounts changed:', accounts);
+        if (accounts.length === 0) {
+          setNetworkStatus('disconnected');
+        } else if (networkStatus === 'disconnected') {
+          setNetworkStatus('connected');
+        }
+      };
+      window.ethereum.on('accountsChanged', accountsListener);
+      contractEventListeners.push({ type: 'accountsChanged', listener: accountsListener });
+    }
+  };
+
+  const cleanupEventListeners = () => {
+    contractEventListeners.forEach(({ type, listener }) => {
+      if (window.ethereum) {
+        window.ethereum.removeListener(type, listener);
+      }
+    });
+    contractEventListeners = [];
+  };
+
+  return {
+    isReady,
+    error,
+    instance: fhevmInstance,
+    networkStatus,
+    blockNumber,
+    reconnect: () => {
+      setNetworkStatus('connecting');
+      initializeFHEVM().then(() => setNetworkStatus('connected')).catch(() => setNetworkStatus('disconnected'));
+    }
+  };
+}
+
+// Contract event monitoring hook
+export function useContractEvents(contractAddress?: string, abi?: any[]) {
+  const [events, setEvents] = React.useState<any[]>([]);
+  const [isListening, setIsListening] = React.useState(false);
+
+  useEffect(() => {
+    if (!contractAddress || !abi || !window.ethereum) return;
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const contract = new ethers.Contract(contractAddress, abi, provider);
+
+    setIsListening(true);
+
+    // Listen for PredictionSubmitted events
+    const predictionSubmittedListener = (predictionId: any, predictor: any, location: any, targetDate: any, timestamp: any) => {
+      setEvents(prev => [...prev, {
+        type: 'PredictionSubmitted',
+        predictionId: predictionId.toString(),
+        predictor,
+        location,
+        targetDate: targetDate.toString(),
+        timestamp: timestamp.toString(),
+        blockNumber: null // Would be filled by event log
+      }]);
+    };
+
+    // Listen for PredictionRevealed events
+    const predictionRevealedListener = (predictionId: any, predictor: any, actualTemperature: any, accuracy: any) => {
+      setEvents(prev => [...prev, {
+        type: 'PredictionRevealed',
+        predictionId: predictionId.toString(),
+        predictor,
+        actualTemperature: actualTemperature.toString(),
+        accuracy: accuracy.toString(),
+        blockNumber: null
+      }]);
+    };
+
+    contract.on('PredictionSubmitted', predictionSubmittedListener);
+    contract.on('PredictionRevealed', predictionRevealedListener);
+
+    contractEventListeners.push(
+      { contract: contractAddress, event: 'PredictionSubmitted', listener: predictionSubmittedListener },
+      { contract: contractAddress, event: 'PredictionRevealed', listener: predictionRevealedListener }
+    );
+
+    return () => {
+      contract.off('PredictionSubmitted', predictionSubmittedListener);
+      contract.off('PredictionRevealed', predictionRevealedListener);
+      setIsListening(false);
+    };
+  }, [contractAddress, abi]);
+
+  const clearEvents = () => setEvents([]);
+
+  return { events, isListening, clearEvents };
 }
 
 /**

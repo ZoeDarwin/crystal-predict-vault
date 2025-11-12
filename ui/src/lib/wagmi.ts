@@ -1,8 +1,9 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { mainnet, sepolia, hardhat } from 'wagmi/chains';
-import { http } from 'wagmi';
+import { http, createConfig } from 'wagmi';
+import { injected, walletConnect, metaMask } from 'wagmi/connectors';
 
-export const config = getDefaultConfig({
+export const config = createConfig({
   appName: 'Private Weather Guess',
   projectId: 'YOUR_PROJECT_ID', // Get from WalletConnect Cloud
   chains: [
@@ -18,6 +19,11 @@ export const config = getDefaultConfig({
       },
     },
     sepolia,
+  ],
+  connectors: [
+    injected(),
+    walletConnect({ projectId: 'YOUR_PROJECT_ID' }),
+    metaMask(),
   ],
   transports: {
     [hardhat.id]: http(),
