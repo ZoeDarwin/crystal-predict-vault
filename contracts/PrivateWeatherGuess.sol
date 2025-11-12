@@ -471,11 +471,40 @@ contract PrivateWeatherGuess is SepoliaConfig {
         owner = newOwner;
     }
 
-    /// @notice Transfer ownership to new owner (only owner)
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "New owner cannot be zero address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+    /// @notice Emergency withdraw function for owner (only in paused state)
+    function emergencyWithdraw() external onlyOwner whenPaused {
+        payable(owner).transfer(address(this).balance);
+    }
+
+    /// @notice Get contract balance
+    function getContractBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+
+    /// @notice Renounce ownership (transfer to zero address)
+    function renounceOwnership() external onlyOwner {
+        emit OwnershipTransferred(owner, address(0));
+        owner = address(0);
+    }
+
+    // Fallback functions
+    receive() external payable {
+        // Accept ETH payments
+    }
+
+    fallback() external payable {
+        // Handle calls to non-existent functions
+        revert("Function not found");
+    }
+
+    /// @notice Get contract status information
+    function getContractStatus() external view returns (
+        bool isPaused,
+        address currentOwner,
+        uint256 totalPredictions,
+        uint256 contractBalance
+    ) {
+        return (paused, owner, predictionCount, address(this).balance);
     }
 }
 
