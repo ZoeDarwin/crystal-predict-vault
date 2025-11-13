@@ -452,6 +452,126 @@ contract PrivateWeatherGuess is SepoliaConfig {
         revealedPredictions = revealedCount;
     }
 
+    /// @notice Get paginated prediction list
+    /// @param offset Starting index
+    /// @param limit Maximum number of predictions to return
+    function getPredictions(uint256 offset, uint256 limit) external view returns (
+        uint256[] memory predictionIds,
+        address[] memory predictors,
+        string[] memory locations,
+        uint256[] memory targetDates,
+        bool[] memory isRevealedList,
+        bool[] memory isActiveList
+    ) {
+        uint256 endIndex = offset + limit > predictionCount ? predictionCount : offset + limit;
+        uint256 resultCount = endIndex - offset;
+
+        predictionIds = new uint256[](resultCount);
+        predictors = new address[](resultCount);
+        locations = new string[](resultCount);
+        targetDates = new uint256[](resultCount);
+        isRevealedList = new bool[](resultCount);
+        isActiveList = new bool[](resultCount);
+
+        for (uint256 i = 0; i < resultCount; i++) {
+            uint256 predictionId = offset + i;
+            Prediction storage prediction = predictions[predictionId];
+
+            predictionIds[i] = predictionId;
+            predictors[i] = prediction.predictor;
+            locations[i] = prediction.location;
+            targetDates[i] = prediction.targetDate;
+            isRevealedList[i] = prediction.isRevealed;
+            isActiveList[i] = prediction.isActive;
+        }
+    }
+
+    /// @notice Search predictions by location (case-insensitive partial match)
+    /// @param searchLocation Location substring to search for
+    /// @param limit Maximum number of results
+    function searchPredictionsByLocation(string memory searchLocation, uint256 limit) external view returns (
+        uint256[] memory predictionIds,
+        address[] memory predictors,
+        string[] memory locations
+    ) {
+        uint256 resultCount = 0;
+        uint256[] memory tempIds = new uint256[](predictionCount);
+
+        // First pass: count matches
+        for (uint256 i = 0; i < predictionCount; i++) {
+            string memory location = predictions[i].location;
+            if (_containsString(location, searchLocation) && resultCount < limit) {
+                tempIds[resultCount] = i;
+                resultCount++;
+            }
+        }
+
+        // Allocate exact-sized arrays
+        predictionIds = new uint256[](resultCount);
+        predictors = new address[](resultCount);
+        locations = new string[](resultCount);
+
+        // Second pass: populate results
+        for (uint256 i = 0; i < resultCount; i++) {
+            uint256 predictionId = tempIds[i];
+            predictionIds[i] = predictionId;
+            predictors[i] = predictions[predictionId].predictor;
+            locations[i] = predictions[predictionId].location;
+        }
+    }
+
+    /// @dev Helper function to check if string contains substring
+    function _containsString(string memory haystack, string memory needle) internal pure returns (bool) {
+        bytes memory haystackBytes = bytes(haystack);
+        bytes memory needleBytes = bytes(needle);
+
+        if (needleBytes.length > haystackBytes.length) {
+            return false;
+        }
+
+        for (uint256 i = 0; i <= haystackBytes.length - needleBytes.length; i++) {
+            bool found = true;
+            for (uint256 j = 0; j < needleBytes.length; j++) {
+                if (haystackBytes[i + j] != needleBytes[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// @notice Get user's active predictions
+    function getUserActivePredictions(address user, uint256 limit) external view returns (uint256[] memory) {
+        uint256[] memory userPredictionIds = _userPredictions[user];
+        uint256 activeCount = 0;
+
+        // Count active predictions
+        for (uint256 i = 0; i < userPredictionIds.length; i++) {
+            if (predictions[userPredictionIds[i]].isActive) {
+                activeCount++;
+            }
+        }
+
+        uint256 resultCount = activeCount > limit ? limit : activeCount;
+        uint256[] memory activeIds = new uint256[](resultCount);
+        uint256 index = 0;
+
+        // Collect active prediction IDs
+        for (uint256 i = 0; i < userPredictionIds.length && index < resultCount; i++) {
+            uint256 predictionId = userPredictionIds[i];
+            if (predictions[predictionId].isActive) {
+                activeIds[index] = predictionId;
+                index++;
+            }
+        }
+
+        return activeIds;
+    }
+
     /// @notice Pause contract operations (only owner)
     function pause() external onlyOwner whenNotPaused {
         paused = true;
