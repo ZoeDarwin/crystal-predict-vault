@@ -1,5 +1,13 @@
 # Crystal Predict Vault
 
+## 🚀 Features
+
+- **Fully Homomorphic Encryption (FHE)**: Predictions are encrypted on-chain using Zama's FHEVM
+- **Real-time Updates**: Live prediction status and leaderboard updates
+- **Secure Prediction Submission**: Encrypted temperature predictions with confidence levels
+- **Advanced Leaderboard**: Accuracy-based ranking with percentile calculations
+- **Responsive UI**: Modern React interface with comprehensive error handling
+
 A privacy-preserving weather prediction system built on blockchain using Fully Homomorphic Encryption (FHE). This application allows users to submit encrypted temperature predictions that are stored on-chain and revealed after the target date for ranking purposes.
 
 ## 🌐 Live Demo
