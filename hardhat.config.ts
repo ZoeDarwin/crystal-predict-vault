@@ -39,6 +39,15 @@ const config: HardhatUserConfig = {
       },
       chainId: 31337,
     },
+    localhost: {
+      accounts: {
+        mnemonic: MNEMONIC,
+        path: "m/44'/60'/0'/0/",
+        count: 10,
+      },
+      chainId: 31337,
+      url: "http://localhost:8545",
+    },
     anvil: {
       accounts: {
         mnemonic: MNEMONIC,
