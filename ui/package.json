@@ -64,7 +64,8 @@
     "viem": "^2.39.0",
     "wagmi": "^2.19.3",
     "zod": "^3.25.76",
-    "@zama-fhe/relayer-sdk": "^0.2.0"
+    "@zama-fhe/relayer-sdk": "^0.2.0",
+    "@fhevm/mock-utils": "^0.1.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
