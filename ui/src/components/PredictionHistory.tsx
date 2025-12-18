@@ -169,3 +169,11 @@ const PredictionCard = ({ prediction, onViewDetails }: PredictionCardProps) => {
 };
 
 export default PredictionHistory;
+
+
+
+
+
+
+
+

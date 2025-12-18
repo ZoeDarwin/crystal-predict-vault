@@ -31,7 +31,7 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
     targetDate: "",
     temperature: "",
     confidence: 80,
-    locationType: "city"
+    locationType: "city",
   });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
@@ -43,8 +43,16 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
 
   // Predefined location suggestions
   const locationSuggestions = [
-    "New York", "London", "Tokyo", "Paris", "Sydney",
-    "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia"
+    "New York",
+    "London",
+    "Tokyo",
+    "Paris",
+    "Sydney",
+    "Los Angeles",
+    "Chicago",
+    "Houston",
+    "Phoenix",
+    "Philadelphia",
   ];
 
   // Form validation
@@ -116,16 +124,11 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
       const temperature = parseFloat(formData.temperature);
       const targetTimestamp = Math.floor(new Date(formData.targetDate).getTime() / 1000);
 
-      await submitPrediction({
+      await submitPrediction.mutateAsync({
         location: formData.location.trim(),
         targetDate: targetTimestamp,
         temperature: temperature,
-        confidence: formData.confidence
-      });
-
-      toast({
-        title: "Prediction Submitted",
-        description: `Your prediction for ${formData.location} has been submitted successfully!`,
+        confidence: formData.confidence,
       });
 
       // Reset form and close dialog
@@ -134,11 +137,10 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
         targetDate: "",
         temperature: "",
         confidence: 80,
-        locationType: "city"
+        locationType: "city",
       });
       setValidationErrors({});
       setOpen(false);
-
     } catch (error) {
       console.error("Prediction submission failed:", error);
       toast({
@@ -153,19 +155,17 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
 
   // Handle form input changes
   const handleInputChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear validation error when user starts typing
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: "" }));
+      setValidationErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-2xl bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">Create Weather Prediction</DialogTitle>
@@ -173,7 +173,7 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
             Submit an encrypted temperature prediction for a future date
           </DialogDescription>
         </DialogHeader>
-        
+
         {!contractAddress && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
@@ -182,17 +182,21 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
               <p className="mb-2">The contract is not deployed on chain {chainId}.</p>
               <p className="mb-2">Please follow these steps:</p>
               <ol className="list-decimal list-inside space-y-1 text-sm">
-                <li>Deploy the contract: <code className="bg-muted px-1 rounded">npx hardhat deploy --network localhost</code></li>
-                <li>Update <code className="bg-muted px-1 rounded">ui/src/config/contracts.ts</code> with the deployed address</li>
+                <li>
+                  Deploy the contract:{" "}
+                  <code className="bg-muted px-1 rounded">npx hardhat deploy --network localhost</code>
+                </li>
+                <li>
+                  Update <code className="bg-muted px-1 rounded">ui/src/config/contracts.ts</code> with the deployed
+                  address
+                </li>
                 <li>Refresh this page</li>
               </ol>
-              <p className="mt-2 text-xs text-muted-foreground">
-                See README.md for detailed instructions.
-              </p>
+              <p className="mt-2 text-xs text-muted-foreground">See README.md for detailed instructions.</p>
             </AlertDescription>
           </Alert>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Location Input with Suggestions */}
           <div className="space-y-2">
@@ -216,11 +220,9 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
                 value={formData.location}
                 onChange={(e) => handleInputChange("location", e.target.value)}
                 placeholder="e.g., New York, London, Tokyo"
-                className={`bg-background border-border text-foreground ${validationErrors.location ? 'border-destructive' : ''}`}
+                className={`bg-background border-border text-foreground ${validationErrors.location ? "border-destructive" : ""}`}
               />
-              {validationErrors.location && (
-                <p className="text-sm text-destructive">{validationErrors.location}</p>
-              )}
+              {validationErrors.location && <p className="text-sm text-destructive">{validationErrors.location}</p>}
               <div className="flex flex-wrap gap-1 mt-2">
                 {locationSuggestions.slice(0, 5).map((suggestion) => (
                   <Button
@@ -249,16 +251,12 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
               type="date"
               value={formData.targetDate}
               onChange={(e) => handleInputChange("targetDate", e.target.value)}
-              min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-              max={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-              className={`bg-background border-border text-foreground ${validationErrors.targetDate ? 'border-destructive' : ''}`}
+              min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
+              max={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
+              className={`bg-background border-border text-foreground ${validationErrors.targetDate ? "border-destructive" : ""}`}
             />
-            {validationErrors.targetDate && (
-              <p className="text-sm text-destructive">{validationErrors.targetDate}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Select a future date (tomorrow to 1 year from now)
-            </p>
+            {validationErrors.targetDate && <p className="text-sm text-destructive">{validationErrors.targetDate}</p>}
+            <p className="text-xs text-muted-foreground">Select a future date (tomorrow to 1 year from now)</p>
           </div>
 
           {/* Temperature Input */}
@@ -276,11 +274,9 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
               placeholder="25.5"
               min="-100"
               max="100"
-              className={`bg-background border-border text-foreground ${validationErrors.temperature ? 'border-destructive' : ''}`}
+              className={`bg-background border-border text-foreground ${validationErrors.temperature ? "border-destructive" : ""}`}
             />
-            {validationErrors.temperature && (
-              <p className="text-sm text-destructive">{validationErrors.temperature}</p>
-            )}
+            {validationErrors.temperature && <p className="text-sm text-destructive">{validationErrors.temperature}</p>}
           </div>
 
           {/* Confidence Slider */}
@@ -297,9 +293,7 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
               step={1}
               className="w-full"
             />
-            {validationErrors.confidence && (
-              <p className="text-sm text-destructive">{validationErrors.confidence}</p>
-            )}
+            {validationErrors.confidence && <p className="text-sm text-destructive">{validationErrors.confidence}</p>}
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Low</span>
               <span>High</span>
@@ -318,8 +312,6 @@ const CreatePredictionDialog = ({ children }: CreatePredictionDialogProps) => {
             </Button>
             <Button
               type="submit"
-              className="flex-1"
-              disabled={isSubmitting || !isConnected}
               className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow-cyan"
               disabled={submitPrediction.isPending || !contractAddress || !isConnected}
             >

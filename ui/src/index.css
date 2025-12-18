@@ -42,7 +42,7 @@ All colors MUST be HSL.
     --gradient-card: linear-gradient(145deg, hsl(225 40% 12% / 0.6) 0%, hsl(270 30% 15% / 0.4) 100%);
     --glow-cyan: 0 0 20px hsl(190 100% 50% / 0.3), 0 0 40px hsl(190 100% 50% / 0.2);
     --glow-purple: 0 0 20px hsl(270 60% 50% / 0.3), 0 0 40px hsl(270 60% 50% / 0.2);
-    
+
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
@@ -54,5 +54,36 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Animation delay utilities */
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  /* Scale utilities */
+  .hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Glow effects */
+  .glow-text {
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  }
+
+  /* Backdrop blur enhancement */
+  .backdrop-blur-xl {
+    backdrop-filter: blur(20px);
   }
 }

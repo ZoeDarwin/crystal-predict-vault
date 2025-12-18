@@ -27,7 +27,7 @@ let contractEventListeners: any[] = []; // Track active event listeners
 export const useFHEVM = React.memo(() => {
   const [isReady, setIsReady] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [networkStatus, setNetworkStatus] = React.useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const [networkStatus, setNetworkStatus] = React.useState<"connecting" | "connected" | "disconnected">("connecting");
   const [blockNumber, setBlockNumber] = React.useState<number | null>(null);
 
   useEffect(() => {
@@ -35,13 +35,13 @@ export const useFHEVM = React.memo(() => {
       try {
         await initializeFHEVM();
         setIsReady(true);
-        setNetworkStatus('connected');
+        setNetworkStatus("connected");
 
         // Set up blockchain event listeners
         setupBlockchainListeners();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to initialize FHEVM');
-        setNetworkStatus('disconnected');
+        setError(err instanceof Error ? err.message : "Failed to initialize FHEVM");
+        setNetworkStatus("disconnected");
       }
     };
 
@@ -54,39 +54,41 @@ export const useFHEVM = React.memo(() => {
   }, []);
 
   const setupBlockchainListeners = () => {
-    if (typeof window !== 'undefined' && window.ethereum) {
+    if (typeof window !== "undefined" && window.ethereum) {
       // Listen for new blocks
       const blockListener = (blockNumber: string) => {
         setBlockNumber(parseInt(blockNumber, 16));
       };
-      window.ethereum.on('block', blockListener);
-      contractEventListeners.push({ type: 'block', listener: blockListener });
+      window.ethereum.on("block", blockListener);
+      contractEventListeners.push({ type: "block", listener: blockListener });
 
       // Listen for network changes
       const networkListener = (networkId: string) => {
-        console.log('[FHEVM] Network changed:', networkId);
+        console.log("[FHEVM] Network changed:", networkId);
         // Reinitialize FHEVM on network change
-        setNetworkStatus('connecting');
-        initializeFHEVM().then(() => {
-          setNetworkStatus('connected');
-        }).catch(() => {
-          setNetworkStatus('disconnected');
-        });
+        setNetworkStatus("connecting");
+        initializeFHEVM()
+          .then(() => {
+            setNetworkStatus("connected");
+          })
+          .catch(() => {
+            setNetworkStatus("disconnected");
+          });
       };
-      window.ethereum.on('networkChanged', networkListener);
-      contractEventListeners.push({ type: 'networkChanged', listener: networkListener });
+      window.ethereum.on("networkChanged", networkListener);
+      contractEventListeners.push({ type: "networkChanged", listener: networkListener });
 
       // Listen for account changes
       const accountsListener = (accounts: string[]) => {
-        console.log('[FHEVM] Accounts changed:', accounts);
+        console.log("[FHEVM] Accounts changed:", accounts);
         if (accounts.length === 0) {
-          setNetworkStatus('disconnected');
-        } else if (networkStatus === 'disconnected') {
-          setNetworkStatus('connected');
+          setNetworkStatus("disconnected");
+        } else if (networkStatus === "disconnected") {
+          setNetworkStatus("connected");
         }
       };
-      window.ethereum.on('accountsChanged', accountsListener);
-      contractEventListeners.push({ type: 'accountsChanged', listener: accountsListener });
+      window.ethereum.on("accountsChanged", accountsListener);
+      contractEventListeners.push({ type: "accountsChanged", listener: accountsListener });
     }
   };
 
@@ -106,11 +108,13 @@ export const useFHEVM = React.memo(() => {
     networkStatus,
     blockNumber,
     reconnect: () => {
-      setNetworkStatus('connecting');
-      initializeFHEVM().then(() => setNetworkStatus('connected')).catch(() => setNetworkStatus('disconnected'));
-    }
+      setNetworkStatus("connecting");
+      initializeFHEVM()
+        .then(() => setNetworkStatus("connected"))
+        .catch(() => setNetworkStatus("disconnected"));
+    },
   };
-}
+});
 
 // Contract event monitoring hook
 export function useContractEvents(contractAddress?: string, abi?: any[]) {
@@ -126,41 +130,53 @@ export function useContractEvents(contractAddress?: string, abi?: any[]) {
     setIsListening(true);
 
     // Listen for PredictionSubmitted events
-    const predictionSubmittedListener = (predictionId: any, predictor: any, location: any, targetDate: any, timestamp: any) => {
-      setEvents(prev => [...prev, {
-        type: 'PredictionSubmitted',
-        predictionId: predictionId.toString(),
-        predictor,
-        location,
-        targetDate: targetDate.toString(),
-        timestamp: timestamp.toString(),
-        blockNumber: null // Would be filled by event log
-      }]);
+    const predictionSubmittedListener = (
+      predictionId: any,
+      predictor: any,
+      location: any,
+      targetDate: any,
+      timestamp: any,
+    ) => {
+      setEvents((prev) => [
+        ...prev,
+        {
+          type: "PredictionSubmitted",
+          predictionId: predictionId.toString(),
+          predictor,
+          location,
+          targetDate: targetDate.toString(),
+          timestamp: timestamp.toString(),
+          blockNumber: null, // Would be filled by event log
+        },
+      ]);
     };
 
     // Listen for PredictionRevealed events
     const predictionRevealedListener = (predictionId: any, predictor: any, actualTemperature: any, accuracy: any) => {
-      setEvents(prev => [...prev, {
-        type: 'PredictionRevealed',
-        predictionId: predictionId.toString(),
-        predictor,
-        actualTemperature: actualTemperature.toString(),
-        accuracy: accuracy.toString(),
-        blockNumber: null
-      }]);
+      setEvents((prev) => [
+        ...prev,
+        {
+          type: "PredictionRevealed",
+          predictionId: predictionId.toString(),
+          predictor,
+          actualTemperature: actualTemperature.toString(),
+          accuracy: accuracy.toString(),
+          blockNumber: null,
+        },
+      ]);
     };
 
-    contract.on('PredictionSubmitted', predictionSubmittedListener);
-    contract.on('PredictionRevealed', predictionRevealedListener);
+    contract.on("PredictionSubmitted", predictionSubmittedListener);
+    contract.on("PredictionRevealed", predictionRevealedListener);
 
     contractEventListeners.push(
-      { contract: contractAddress, event: 'PredictionSubmitted', listener: predictionSubmittedListener },
-      { contract: contractAddress, event: 'PredictionRevealed', listener: predictionRevealedListener }
+      { contract: contractAddress, event: "PredictionSubmitted", listener: predictionSubmittedListener },
+      { contract: contractAddress, event: "PredictionRevealed", listener: predictionRevealedListener },
     );
 
     return () => {
-      contract.off('PredictionSubmitted', predictionSubmittedListener);
-      contract.off('PredictionRevealed', predictionRevealedListener);
+      contract.off("PredictionSubmitted", predictionSubmittedListener);
+      contract.off("PredictionRevealed", predictionRevealedListener);
       setIsListening(false);
     };
   }, [contractAddress, abi]);
@@ -210,7 +226,7 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
     // Initialize SDK for Sepolia only
     if (currentChainId === 11155111 && !isSDKInitialized) {
       console.log("[FHEVM] Initializing FHE SDK for Sepolia...");
-      
+
       try {
         // Dynamically import Sepolia SDK only when needed
         if (!createInstance || !initSDK || !SepoliaConfig) {
@@ -219,7 +235,7 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
           initSDK = sdk.initSDK;
           SepoliaConfig = sdk.SepoliaConfig;
         }
-        
+
         if (initSDK) {
           await initSDK();
           isSDKInitialized = true;
@@ -234,14 +250,14 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
     // Local network: Use Mock FHEVM
     if (currentChainId === 31337) {
       const localhostRpcUrl = "http://localhost:8545";
-      
+
       try {
         console.log("[FHEVM] Fetching FHEVM metadata from Hardhat node...");
         const provider = new JsonRpcProvider(localhostRpcUrl);
         const metadata = await provider.send("fhevm_relayer_metadata", []);
-        
+
         console.log("[FHEVM] Metadata:", metadata);
-        
+
         if (metadata && metadata.ACLAddress && metadata.InputVerifierAddress && metadata.KMSVerifierAddress) {
           // Use @fhevm/mock-utils to create mock instance
           if (!MockFhevmInstance || !userDecryptHandleBytes32) {
@@ -250,9 +266,9 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
             userDecryptHandleBytes32 = mockUtils.userDecryptHandleBytes32;
             console.log("[FHEVM] ✅ Loaded mock-utils");
           }
-          
+
           console.log("[FHEVM] Creating MockFhevmInstance...");
-          
+
           const mockInstance = await MockFhevmInstance.create(provider, provider, {
             aclContractAddress: metadata.ACLAddress,
             chainId: 31337,
@@ -262,15 +278,15 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
             verifyingContractAddressDecryption: "0x5ffdaAB0373E62E2ea2944776209aEf29E631A64",
             verifyingContractAddressInputVerification: "0x812b06e1CDCE800494b79fFE4f925A504a9A9810",
           });
-          
+
           console.log("[FHEVM] Mock instance created:", {
             constructor: mockInstance.constructor?.name,
             type: typeof mockInstance,
-            hasGenerateKeypair: typeof mockInstance.generateKeypair === 'function',
+            hasGenerateKeypair: typeof mockInstance.generateKeypair === "function",
           });
-          
+
           // Add generateKeypair method if it doesn't exist
-          if (typeof mockInstance.generateKeypair !== 'function') {
+          if (typeof mockInstance.generateKeypair !== "function") {
             console.log("[FHEVM] Adding generateKeypair method to Mock instance...");
             (mockInstance as any).generateKeypair = () => {
               return {
@@ -280,7 +296,7 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
             };
             console.log("[FHEVM] ✅ Added generateKeypair method to Mock instance");
           }
-          
+
           fhevmInstance = mockInstance;
           lastChainId = currentChainId;
           console.log("[FHEVM] ✅ Mock FHEVM instance created successfully!");
@@ -292,23 +308,23 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
         console.error("[FHEVM] Failed to create Mock instance:", error);
         throw new Error(
           `Local Hardhat node FHEVM initialization failed: ${error.message}\n\n` +
-          `Please ensure:\n` +
-          `1. Hardhat node is running (npx hardhat node)\n` +
-          `2. @fhevm/hardhat-plugin is imported in hardhat.config.ts\n` +
-          `3. Restart Hardhat node and retry`
+            `Please ensure:\n` +
+            `1. Hardhat node is running (npx hardhat node)\n` +
+            `2. @fhevm/hardhat-plugin is imported in hardhat.config.ts\n` +
+            `3. Restart Hardhat node and retry`,
         );
       }
     }
-    
+
     // Sepolia network: Use official SDK with MetaMask provider to avoid CORS
     else if (currentChainId === 11155111) {
       try {
         console.log("[FHEVM] Creating Sepolia FHEVM instance...");
-        
+
         if (typeof window === "undefined" || !(window as any).ethereum) {
           throw new Error("MetaMask not detected. Please install MetaMask to use Sepolia network.");
         }
-        
+
         // Dynamically import Sepolia SDK if not already loaded
         if (!createInstance || !SepoliaConfig) {
           const sdk = await import("@zama-fhe/relayer-sdk/bundle");
@@ -316,7 +332,7 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
           initSDK = sdk.initSDK;
           SepoliaConfig = sdk.SepoliaConfig;
         }
-        
+
         // Initialize SDK if not already initialized
         if (!isSDKInitialized && initSDK) {
           try {
@@ -327,29 +343,27 @@ export async function initializeFHEVM(chainId?: number): Promise<FhevmInstance> 
             console.warn("[FHEVM] SDK initialization failed, continuing:", initError);
           }
         }
-        
+
         // Create config using MetaMask provider (no CORS issues)
         const config = {
           ...SepoliaConfig,
-          network: (window as any).ethereum,  // Use MetaMask provider
+          network: (window as any).ethereum, // Use MetaMask provider
         };
-        
+
         fhevmInstance = await createInstance(config);
         lastChainId = currentChainId;
         console.log("[FHEVM] ✅ Sepolia FHEVM instance created successfully!");
       } catch (error: any) {
         console.error("[FHEVM] ❌ Sepolia instance creation failed:", error);
-        throw new Error(
-          `Failed to create Sepolia FHEVM instance: ${error.message || "Unknown error"}`
-        );
+        throw new Error(`Failed to create Sepolia FHEVM instance: ${error.message || "Unknown error"}`);
       }
-    }
-    
-    else {
-      throw new Error(`Unsupported network (Chain ID: ${currentChainId}). Please switch to local network (31337) or Sepolia (11155111).`);
+    } else {
+      throw new Error(
+        `Unsupported network (Chain ID: ${currentChainId}). Please switch to local network (31337) or Sepolia (11155111).`,
+      );
     }
   }
-  
+
   return fhevmInstance;
 }
 
@@ -367,20 +381,18 @@ export async function encryptInput(
   fhevm: FhevmInstance,
   contractAddress: string,
   userAddress: string,
-  value: number
+  value: number,
 ): Promise<EncryptedInput> {
   try {
-    const encryptedInput = fhevm
-      .createEncryptedInput(contractAddress, userAddress)
-      .add32(value);
-    
+    const encryptedInput = fhevm.createEncryptedInput(contractAddress, userAddress).add32(value);
+
     const encrypted = await encryptedInput.encrypt();
-    
+
     // Convert to format required by contract
-    const handles = encrypted.handles.map(handle => {
+    const handles = encrypted.handles.map((handle) => {
       const hexHandle = ethers.hexlify(handle);
       if (hexHandle.length < 66) {
-        const padded = hexHandle.slice(2).padStart(64, '0');
+        const padded = hexHandle.slice(2).padStart(64, "0");
         return `0x${padded}`;
       }
       if (hexHandle.length > 66) {
@@ -388,7 +400,7 @@ export async function encryptInput(
       }
       return hexHandle;
     });
-    
+
     return {
       handles,
       inputProof: ethers.hexlify(encrypted.inputProof),
@@ -408,7 +420,7 @@ export async function decryptEuint32(
   contractAddress: string,
   userAddress: string,
   signer: any,
-  chainId?: number
+  chainId?: number,
 ): Promise<number> {
   // Validate handle format
   if (!handle || handle === "0x" || handle.length !== 66) {
@@ -417,40 +429,35 @@ export async function decryptEuint32(
 
   const isLocalNetwork = chainId === 31337;
   const isSepoliaNetwork = chainId === 11155111;
-  
+
   if (isLocalNetwork) {
-    const mockInstance = fhevm || await getFHEVMInstance(chainId);
-    
+    const mockInstance = fhevm || (await getFHEVMInstance(chainId));
+
     if (!mockInstance) {
       throw new Error("Mock FHEVM instance not available for local network");
     }
-    
+
     // Ensure generateKeypair method exists
-    if (typeof mockInstance.generateKeypair !== 'function') {
+    if (typeof mockInstance.generateKeypair !== "function") {
       (mockInstance as any).generateKeypair = () => ({
         publicKey: new Uint8Array(32).fill(0),
         privateKey: new Uint8Array(32).fill(0),
       });
     }
-    
+
     const keypair = mockInstance.generateKeypair();
     const contractAddresses = [contractAddress];
     const startTimeStamp = Math.floor(Date.now() / 1000).toString();
     const durationDays = "10";
-    
-    const eip712 = mockInstance.createEIP712(
-      keypair.publicKey,
-      contractAddresses,
-      startTimeStamp,
-      durationDays
-    );
-    
+
+    const eip712 = mockInstance.createEIP712(keypair.publicKey, contractAddresses, startTimeStamp, durationDays);
+
     const signature = await signer.signTypedData(
       eip712.domain,
       { UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification },
-      eip712.message
+      eip712.message,
     );
-    
+
     const result = await mockInstance.userDecrypt(
       [{ handle, contractAddress }],
       keypair.privateKey,
@@ -459,49 +466,43 @@ export async function decryptEuint32(
       contractAddresses,
       userAddress,
       startTimeStamp,
-      durationDays
+      durationDays,
     );
-    
+
     const value = result[handle];
     if (value === undefined) {
       throw new Error(`Decryption failed: No value returned for handle ${handle}`);
     }
-    
+
     return Number(value);
   } else if (isSepoliaNetwork) {
     if (!fhevm) {
       throw new Error(
         `FHEVM instance is null or undefined. ` +
-        `Please ensure you're connected to Sepolia network (Chain ID: 11155111) and FHEVM is properly initialized.`
+          `Please ensure you're connected to Sepolia network (Chain ID: 11155111) and FHEVM is properly initialized.`,
       );
     }
-    
-    if (typeof fhevm.generateKeypair !== 'function') {
+
+    if (typeof fhevm.generateKeypair !== "function") {
       throw new Error(
-        `Invalid FHEVM instance for Sepolia network. ` +
-        `Expected Sepolia FHEVM instance with generateKeypair method.`
+        `Invalid FHEVM instance for Sepolia network. ` + `Expected Sepolia FHEVM instance with generateKeypair method.`,
       );
     }
-    
+
     const keypair = fhevm.generateKeypair();
     const contractAddresses = [contractAddress];
-    
+
     const startTimeStamp = Math.floor(Date.now() / 1000).toString();
     const durationDays = "10";
-    
-    const eip712 = fhevm.createEIP712(
-      keypair.publicKey,
-      contractAddresses,
-      startTimeStamp,
-      durationDays
-    );
-    
+
+    const eip712 = fhevm.createEIP712(keypair.publicKey, contractAddresses, startTimeStamp, durationDays);
+
     const signature = await signer.signTypedData(
       eip712.domain,
       { UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification },
-      eip712.message
+      eip712.message,
     );
-    
+
     const result = await fhevm.userDecrypt(
       [{ handle, contractAddress }],
       keypair.privateKey,
@@ -510,14 +511,14 @@ export async function decryptEuint32(
       contractAddresses,
       userAddress,
       startTimeStamp,
-      durationDays
+      durationDays,
     );
-    
+
     return Number(result[handle] || 0);
   } else {
     throw new Error(
       `Unsupported network for decryption. ChainId: ${chainId}. ` +
-      `Supported networks: Local (31337) or Sepolia (11155111).`
+        `Supported networks: Local (31337) or Sepolia (11155111).`,
     );
   }
 }
@@ -530,4 +531,3 @@ export function resetFHEVMInstance() {
   lastChainId = null;
   console.log("[FHEVM] Instance and chainId tracking reset");
 }
-

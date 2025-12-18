@@ -26,14 +26,24 @@ import type {
 export interface PrivateWeatherGuessInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "emergencyWithdraw"
+      | "getContractBalance"
+      | "getContractStatus"
       | "getEncryptedConfidence"
       | "getEncryptedTemperature"
+      | "getGlobalStats"
       | "getLeaderboardCount"
       | "getLeaderboardEntry"
       | "getPrediction"
       | "getPredictionCount"
+      | "getPredictionPercentile"
+      | "getPredictionRanking"
+      | "getPredictions"
+      | "getTopPredictions"
+      | "getUserActivePredictions"
       | "getUserPredictionCount"
       | "getUserPredictions"
+      | "getUserStats"
       | "leaderboard"
       | "leaderboardIds"
       | "owner"
@@ -42,7 +52,9 @@ export interface PrivateWeatherGuessInterface extends Interface {
       | "predictionCount"
       | "predictions"
       | "protocolId"
+      | "renounceOwnership"
       | "revealPrediction"
+      | "searchPredictionsByLocation"
       | "submitPrediction"
       | "transferOwnership"
       | "unpause"
@@ -60,12 +72,28 @@ export interface PrivateWeatherGuessInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
+    functionFragment: "emergencyWithdraw",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getContractBalance",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getContractStatus",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getEncryptedConfidence",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getEncryptedTemperature",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getGlobalStats",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getLeaderboardCount",
@@ -84,11 +112,35 @@ export interface PrivateWeatherGuessInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getPredictionPercentile",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPredictionRanking",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPredictions",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getTopPredictions",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getUserActivePredictions",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getUserPredictionCount",
     values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getUserPredictions",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getUserStats",
     values: [AddressLike]
   ): string;
   encodeFunctionData(
@@ -115,8 +167,16 @@ export interface PrivateWeatherGuessInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "renounceOwnership",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "revealPrediction",
     values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "searchPredictionsByLocation",
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "submitPrediction",
@@ -133,11 +193,27 @@ export interface PrivateWeatherGuessInterface extends Interface {
   ): string;
 
   decodeFunctionResult(
+    functionFragment: "emergencyWithdraw",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getContractBalance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getContractStatus",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getEncryptedConfidence",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "getEncryptedTemperature",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getGlobalStats",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -157,11 +233,35 @@ export interface PrivateWeatherGuessInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getPredictionPercentile",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getPredictionRanking",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getPredictions",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getTopPredictions",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getUserActivePredictions",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getUserPredictionCount",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "getUserPredictions",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getUserStats",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -185,7 +285,15 @@ export interface PrivateWeatherGuessInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "protocolId", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "revealPrediction",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "searchPredictionsByLocation",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -349,6 +457,23 @@ export interface PrivateWeatherGuess extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  emergencyWithdraw: TypedContractMethod<[], [void], "nonpayable">;
+
+  getContractBalance: TypedContractMethod<[], [bigint], "view">;
+
+  getContractStatus: TypedContractMethod<
+    [],
+    [
+      [boolean, string, bigint, bigint] & {
+        isPaused: boolean;
+        currentOwner: string;
+        totalPredictions: bigint;
+        contractBalance: bigint;
+      }
+    ],
+    "view"
+  >;
+
   getEncryptedConfidence: TypedContractMethod<
     [predictionId: BigNumberish],
     [string],
@@ -358,6 +483,18 @@ export interface PrivateWeatherGuess extends BaseContract {
   getEncryptedTemperature: TypedContractMethod<
     [predictionId: BigNumberish],
     [string],
+    "view"
+  >;
+
+  getGlobalStats: TypedContractMethod<
+    [],
+    [
+      [bigint, bigint, bigint] & {
+        totalPredictions: bigint;
+        revealedPredictions: bigint;
+        averageAccuracy: bigint;
+      }
+    ],
     "view"
   >;
 
@@ -392,6 +529,45 @@ export interface PrivateWeatherGuess extends BaseContract {
 
   getPredictionCount: TypedContractMethod<[], [bigint], "view">;
 
+  getPredictionPercentile: TypedContractMethod<
+    [predictionId: BigNumberish],
+    [bigint],
+    "view"
+  >;
+
+  getPredictionRanking: TypedContractMethod<
+    [predictionId: BigNumberish],
+    [bigint],
+    "view"
+  >;
+
+  getPredictions: TypedContractMethod<
+    [offset: BigNumberish, limit: BigNumberish],
+    [
+      [bigint[], string[], string[], bigint[], boolean[], boolean[]] & {
+        predictionIds: bigint[];
+        predictors: string[];
+        locations: string[];
+        targetDates: bigint[];
+        isRevealedList: boolean[];
+        isActiveList: boolean[];
+      }
+    ],
+    "view"
+  >;
+
+  getTopPredictions: TypedContractMethod<
+    [limit: BigNumberish],
+    [bigint[]],
+    "view"
+  >;
+
+  getUserActivePredictions: TypedContractMethod<
+    [user: AddressLike, limit: BigNumberish],
+    [bigint[]],
+    "view"
+  >;
+
   getUserPredictionCount: TypedContractMethod<
     [user: AddressLike],
     [bigint],
@@ -401,6 +577,18 @@ export interface PrivateWeatherGuess extends BaseContract {
   getUserPredictions: TypedContractMethod<
     [user: AddressLike],
     [bigint[]],
+    "view"
+  >;
+
+  getUserStats: TypedContractMethod<
+    [user: AddressLike],
+    [
+      [bigint, bigint, bigint] & {
+        totalPredictions: bigint;
+        revealedPredictions: bigint;
+        averageAccuracy: bigint;
+      }
+    ],
     "view"
   >;
 
@@ -444,10 +632,24 @@ export interface PrivateWeatherGuess extends BaseContract {
 
   protocolId: TypedContractMethod<[], [bigint], "view">;
 
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+
   revealPrediction: TypedContractMethod<
     [predictionId: BigNumberish, actualTemperature: BigNumberish],
     [void],
     "nonpayable"
+  >;
+
+  searchPredictionsByLocation: TypedContractMethod<
+    [searchLocation: string, limit: BigNumberish],
+    [
+      [bigint[], string[], string[]] & {
+        predictionIds: bigint[];
+        predictors: string[];
+        locations: string[];
+      }
+    ],
+    "view"
   >;
 
   submitPrediction: TypedContractMethod<
@@ -482,11 +684,44 @@ export interface PrivateWeatherGuess extends BaseContract {
   ): T;
 
   getFunction(
+    nameOrSignature: "emergencyWithdraw"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "getContractBalance"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getContractStatus"
+  ): TypedContractMethod<
+    [],
+    [
+      [boolean, string, bigint, bigint] & {
+        isPaused: boolean;
+        currentOwner: string;
+        totalPredictions: bigint;
+        contractBalance: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "getEncryptedConfidence"
   ): TypedContractMethod<[predictionId: BigNumberish], [string], "view">;
   getFunction(
     nameOrSignature: "getEncryptedTemperature"
   ): TypedContractMethod<[predictionId: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "getGlobalStats"
+  ): TypedContractMethod<
+    [],
+    [
+      [bigint, bigint, bigint] & {
+        totalPredictions: bigint;
+        revealedPredictions: bigint;
+        averageAccuracy: bigint;
+      }
+    ],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "getLeaderboardCount"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -523,11 +758,56 @@ export interface PrivateWeatherGuess extends BaseContract {
     nameOrSignature: "getPredictionCount"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getPredictionPercentile"
+  ): TypedContractMethod<[predictionId: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getPredictionRanking"
+  ): TypedContractMethod<[predictionId: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getPredictions"
+  ): TypedContractMethod<
+    [offset: BigNumberish, limit: BigNumberish],
+    [
+      [bigint[], string[], string[], bigint[], boolean[], boolean[]] & {
+        predictionIds: bigint[];
+        predictors: string[];
+        locations: string[];
+        targetDates: bigint[];
+        isRevealedList: boolean[];
+        isActiveList: boolean[];
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getTopPredictions"
+  ): TypedContractMethod<[limit: BigNumberish], [bigint[]], "view">;
+  getFunction(
+    nameOrSignature: "getUserActivePredictions"
+  ): TypedContractMethod<
+    [user: AddressLike, limit: BigNumberish],
+    [bigint[]],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "getUserPredictionCount"
   ): TypedContractMethod<[user: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "getUserPredictions"
   ): TypedContractMethod<[user: AddressLike], [bigint[]], "view">;
+  getFunction(
+    nameOrSignature: "getUserStats"
+  ): TypedContractMethod<
+    [user: AddressLike],
+    [
+      [bigint, bigint, bigint] & {
+        totalPredictions: bigint;
+        revealedPredictions: bigint;
+        averageAccuracy: bigint;
+      }
+    ],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "leaderboard"
   ): TypedContractMethod<
@@ -577,11 +857,27 @@ export interface PrivateWeatherGuess extends BaseContract {
     nameOrSignature: "protocolId"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "revealPrediction"
   ): TypedContractMethod<
     [predictionId: BigNumberish, actualTemperature: BigNumberish],
     [void],
     "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "searchPredictionsByLocation"
+  ): TypedContractMethod<
+    [searchLocation: string, limit: BigNumberish],
+    [
+      [bigint[], string[], string[]] & {
+        predictionIds: bigint[];
+        predictors: string[];
+        locations: string[];
+      }
+    ],
+    "view"
   >;
   getFunction(
     nameOrSignature: "submitPrediction"

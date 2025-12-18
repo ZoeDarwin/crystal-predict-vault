@@ -4,18 +4,43 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Private Weather Guess - Encrypted Weather Predictions</title>
-    <meta name="description" content="Submit encrypted temperature predictions. All predictions are stored encrypted and revealed after the target date for ranking." />
+    <meta
+      name="description"
+      content="Submit encrypted temperature predictions. All predictions are stored encrypted and revealed after the target date for ranking."
+    />
     <meta name="author" content="Private Weather Guess" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <meta property="og:title" content="Private Weather Guess - Encrypted Weather Predictions" />
-    <meta property="og:description" content="Submit encrypted temperature predictions. All predictions are stored encrypted and revealed after the target date for ranking." />
+    <meta
+      property="og:description"
+      content="Submit encrypted temperature predictions. All predictions are stored encrypted and revealed after the target date for ranking."
+    />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <script>
+      // Prevent browser extensions from interfering with Radix UI Portal
+      if (window.Element && window.Element.prototype) {
+        const originalQuerySelectorAll = window.Element.prototype.querySelectorAll;
+        window.Element.prototype.querySelectorAll = function (selector) {
+          try {
+            return originalQuerySelectorAll.call(this, selector);
+          } catch (e) {
+            // Silently catch selector errors from browser extensions
+            if (e.name === "SyntaxError" && selector && selector.includes("radix")) {
+              console.debug("Blocked invalid Radix UI selector from extension:", selector);
+              return [];
+            }
+            throw e;
+          }
+        };
+      }
+    </script>
   </head>
 
   <body>

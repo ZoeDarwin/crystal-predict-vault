@@ -153,112 +153,20 @@ contract PrivateWeatherGuess is SepoliaConfig {
 
     /// @notice Get prediction basic information
     /// @param predictionId Prediction ID
-    function getPrediction(uint256 predictionId) external view returns (
-        address predictor,
-        string memory location,
-        uint256 targetDate,
-        uint256 submissionTime,
-        bool isRevealed,
-        bool isActive
-    ) {
-        Prediction storage prediction = predictions[predictionId];
-        return (
-            prediction.predictor,
-            prediction.location,
-            prediction.targetDate,
-            prediction.submissionTime,
-            prediction.isRevealed,
-            prediction.isActive
-        );
-    }
-
-    /// @notice Get encrypted temperature (only accessible by prediction owner or after reveal)
-    /// @param predictionId Prediction ID
-    function getEncryptedTemperature(uint256 predictionId) external view returns (euint32) {
-        require(predictions[predictionId].isActive, "Prediction does not exist");
-        require(
-            predictions[predictionId].predictor == msg.sender || predictions[predictionId].isRevealed,
-            "Only prediction owner can access encrypted data before reveal"
-        );
-        return _encryptedData[predictionId].encryptedTemperature;
-    }
-
-    /// @notice Get encrypted confidence (only accessible by prediction owner or after reveal)
-    /// @param predictionId Prediction ID
-    function getEncryptedConfidence(uint256 predictionId) external view returns (euint32) {
-        require(predictions[predictionId].isActive, "Prediction does not exist");
-        require(
-            predictions[predictionId].predictor == msg.sender || predictions[predictionId].isRevealed,
-            "Only prediction owner can access encrypted data before reveal"
-        );
-        return _encryptedData[predictionId].encryptedConfidence;
-    }
-
-    /// @notice Submit new encrypted weather prediction
-    /// @dev Allows users to submit temperature predictions with encrypted temperature and confidence
-    /// @param location Location for the weather prediction
-    /// @param targetDate Target date for the prediction (Unix timestamp)
-    /// @param encryptedTemperature Encrypted temperature in Celsius (multiplied by 10, e.g., 25.5°C = 255)
-    /// @param temperatureProof ZK proof for encrypted temperature
-    /// @param encryptedConfidence Encrypted confidence level (0-1000, where 1000 = 100%)
-    /// @param confidenceProof ZK proof for encrypted confidence
-    function submitPrediction(
-        string memory location,
-        uint256 targetDate,
-        externalEuint32 encryptedTemperature,
-        bytes calldata temperatureProof,
-        externalEuint32 encryptedConfidence,
-        bytes calldata confidenceProof
-    ) external whenNotPaused {
-        require(bytes(location).length > 0 && bytes(location).length <= 100, "Location must be 1-100 characters");
-        require(targetDate > block.timestamp, "Target date must be in the future");
-        require(targetDate <= block.timestamp + 365 days, "Target date cannot be more than 1 year in the future");
-
-        uint256 predictionId = predictionCount++;
-
-        // Import encrypted values
-        euint32 encryptedTemp = FHE.fromExternal(encryptedTemperature, temperatureProof);
-        euint32 encryptedConf = FHE.fromExternal(encryptedConfidence, confidenceProof);
-
-        // Grant access: contract and owner can decrypt
-        FHE.allowThis(encryptedTemp);
-        FHE.allow(encryptedTemp, msg.sender);
-        FHE.allowThis(encryptedConf);
-        FHE.allow(encryptedConf, msg.sender);
-
-        // Create prediction
-        predictions[predictionId] = Prediction({
-            predictor: msg.sender,
-            location: location,
-            targetDate: targetDate,
-            submissionTime: block.timestamp,
-            isRevealed: false,
-            isActive: true
-        });
-
-        // Store encrypted data
-        _encryptedData[predictionId] = EncryptedPredictionData({
-            encryptedTemperature: encryptedTemp,
-            encryptedConfidence: encryptedConf
-        });
-
-        // Update user predictions
-        _userPredictions[msg.sender].push(predictionId);
-        _userPredictionCount[msg.sender]++;
-
-        emit PredictionSubmitted(predictionId, msg.sender, location, targetDate, block.timestamp);
-    }
-
-    /// @notice Get prediction basic information
-    /// @param predictionId Prediction ID
-    function getPrediction(uint256 predictionId) external view returns (
-        address predictor,
-        string memory location,
-        uint256 targetDate,
-        uint256 submissionTime,
-        bool isRevealed,
-        bool isActive
-    ) {
+    function getPrediction(
+        uint256 predictionId
+    )
+        external
+        view
+        returns (
+            address predictor,
+            string memory location,
+            uint256 targetDate,
+            uint256 submissionTime,
+            bool isRevealed,
+            bool isActive
+        )
+    {
         Prediction storage prediction = predictions[predictionId];
         return (
             prediction.predictor,
@@ -392,7 +300,7 @@ contract PrivateWeatherGuess is SepoliaConfig {
 
     /// @notice Get prediction ranking position
     /// @param predictionId Prediction ID to find ranking for
-    function getPredictionRanking(uint256 predictionId) external view returns (uint256) {
+    function getPredictionRanking(uint256 predictionId) public view returns (uint256) {
         require(predictions[predictionId].isRevealed, "Prediction must be revealed");
 
         for (uint256 i = 0; i < leaderboardIds.length; i++) {
@@ -423,7 +331,7 @@ contract PrivateWeatherGuess is SepoliaConfig {
     function updateLeaderboardAccuracy(uint256 predictionId, uint256 accuracy) external onlyOwner whenNotPaused {
         require(predictions[predictionId].isRevealed, "Prediction must be revealed first");
         require(accuracy <= 10000, "Accuracy must be between 0 and 10000");
-        
+
         leaderboard[predictionId].accuracy = accuracy;
         emit LeaderboardUpdated(predictionId, accuracy);
     }
@@ -442,11 +350,9 @@ contract PrivateWeatherGuess is SepoliaConfig {
 
     /// @notice Get leaderboard entry
     /// @param predictionId Prediction ID
-    function getLeaderboardEntry(uint256 predictionId) external view returns (
-        address predictor,
-        int256 actualTemperature,
-        uint256 accuracy
-    ) {
+    function getLeaderboardEntry(
+        uint256 predictionId
+    ) external view returns (address predictor, int256 actualTemperature, uint256 accuracy) {
         LeaderboardEntry storage entry = leaderboard[predictionId];
         require(entry.predictor != address(0), "Leaderboard entry does not exist");
         return (entry.predictor, entry.actualTemperature, entry.accuracy);
@@ -477,11 +383,9 @@ contract PrivateWeatherGuess is SepoliaConfig {
 
     /// @notice Get prediction statistics for a user
     /// @param user User address
-    function getUserStats(address user) external view returns (
-        uint256 totalPredictions,
-        uint256 revealedPredictions,
-        uint256 averageAccuracy
-    ) {
+    function getUserStats(
+        address user
+    ) external view returns (uint256 totalPredictions, uint256 revealedPredictions, uint256 averageAccuracy) {
         uint256[] memory userPredictionIds = _userPredictions[user];
         totalPredictions = userPredictionIds.length;
         uint256 revealedCount = 0;
@@ -500,11 +404,11 @@ contract PrivateWeatherGuess is SepoliaConfig {
     }
 
     /// @notice Get global prediction statistics
-    function getGlobalStats() external view returns (
-        uint256 totalPredictions,
-        uint256 revealedPredictions,
-        uint256 averageAccuracy
-    ) {
+    function getGlobalStats()
+        external
+        view
+        returns (uint256 totalPredictions, uint256 revealedPredictions, uint256 averageAccuracy)
+    {
         totalPredictions = predictionCount;
         uint256 revealedCount = 0;
         uint256 totalAccuracy = 0;
@@ -524,14 +428,21 @@ contract PrivateWeatherGuess is SepoliaConfig {
     /// @notice Get paginated prediction list
     /// @param offset Starting index
     /// @param limit Maximum number of predictions to return
-    function getPredictions(uint256 offset, uint256 limit) external view returns (
-        uint256[] memory predictionIds,
-        address[] memory predictors,
-        string[] memory locations,
-        uint256[] memory targetDates,
-        bool[] memory isRevealedList,
-        bool[] memory isActiveList
-    ) {
+    function getPredictions(
+        uint256 offset,
+        uint256 limit
+    )
+        external
+        view
+        returns (
+            uint256[] memory predictionIds,
+            address[] memory predictors,
+            string[] memory locations,
+            uint256[] memory targetDates,
+            bool[] memory isRevealedList,
+            bool[] memory isActiveList
+        )
+    {
         uint256 endIndex = offset + limit > predictionCount ? predictionCount : offset + limit;
         uint256 resultCount = endIndex - offset;
 
@@ -558,11 +469,10 @@ contract PrivateWeatherGuess is SepoliaConfig {
     /// @notice Search predictions by location (case-insensitive partial match)
     /// @param searchLocation Location substring to search for
     /// @param limit Maximum number of results
-    function searchPredictionsByLocation(string memory searchLocation, uint256 limit) external view returns (
-        uint256[] memory predictionIds,
-        address[] memory predictors,
-        string[] memory locations
-    ) {
+    function searchPredictionsByLocation(
+        string memory searchLocation,
+        uint256 limit
+    ) external view returns (uint256[] memory predictionIds, address[] memory predictors, string[] memory locations) {
         uint256 resultCount = 0;
         uint256[] memory tempIds = new uint256[](predictionCount);
 
@@ -687,13 +597,11 @@ contract PrivateWeatherGuess is SepoliaConfig {
     }
 
     /// @notice Get contract status information
-    function getContractStatus() external view returns (
-        bool isPaused,
-        address currentOwner,
-        uint256 totalPredictions,
-        uint256 contractBalance
-    ) {
+    function getContractStatus()
+        external
+        view
+        returns (bool isPaused, address currentOwner, uint256 totalPredictions, uint256 contractBalance)
+    {
         return (paused, owner, predictionCount, address(this).balance);
     }
 }
-

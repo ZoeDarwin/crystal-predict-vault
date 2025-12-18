@@ -49,15 +49,15 @@ export default {
         },
       },
       backgroundImage: {
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-card': 'var(--gradient-card)',
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-card": "var(--gradient-card)",
       },
       boxShadow: {
-        'glow-cyan': 'var(--glow-cyan)',
-        'glow-purple': 'var(--glow-purple)',
+        "glow-cyan": "var(--glow-cyan)",
+        "glow-purple": "var(--glow-purple)",
       },
       transitionProperty: {
-        'smooth': 'var(--transition-smooth)',
+        smooth: "var(--transition-smooth)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -77,27 +77,33 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
-        "float": {
+        float: {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-10px)" },
         },
-        "reveal": {
+        reveal: {
           "0%": { opacity: "0", filter: "blur(10px)" },
           "100%": { opacity: "1", filter: "blur(0px)" },
         },
-        "unlock": {
+        unlock: {
           "0%": { transform: "rotate(0deg) scale(1)" },
           "50%": { transform: "rotate(5deg) scale(1.1)" },
           "100%": { transform: "rotate(0deg) scale(1)" },
+        },
+        blob: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
-        "float": "float 3s ease-in-out infinite",
-        "reveal": "reveal 0.6s ease-out forwards",
-        "unlock": "unlock 0.5s ease-out",
+        float: "float 3s ease-in-out infinite",
+        reveal: "reveal 0.6s ease-out forwards",
+        unlock: "unlock 0.5s ease-out",
+        blob: "blob 7s infinite",
       },
     },
   },
