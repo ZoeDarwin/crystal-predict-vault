@@ -146,7 +146,7 @@ npm run dev
 
 ---
 
-## 🌐 网络配置
+## 🌐 网络与部署
 
 ### 本地开发
 
@@ -163,6 +163,17 @@ Chain ID: 11155111
 RPC URL: https://sepolia.infura.io/v3/{INFURA_API_KEY}
 合约地址: 待部署
 ```
+
+### Vercel 部署 (推荐)
+
+项目已配置 `vercel.json` 以优化构建过程。
+
+1. **连接 GitHub 仓库**: 在 Vercel 后台导入本项目。
+2. **构建设置**: Vercel 会自动识别 `vercel.json` 配置。
+   - **Build Command**: `cd ui && npm install && npm run build`
+   - **Install Command**: `npm install`
+   - **Output Directory**: `ui/dist`
+3. **环境变量**: 在 Vercel 中添加 `ui/.env` 中的必要变量（如 `VITE_WALLETCONNECT_PROJECT_ID`）。
 
 ---
 
