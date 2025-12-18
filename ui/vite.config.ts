@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
     dedupe: ['ethers'],
   },
   build: {
+    target: "esnext",
     commonjsOptions: {
       include: [/types/, /node_modules/],
       transformMixedEsModules: true,
@@ -34,7 +35,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ["ethers"],
     esbuildOptions: {
-      target: 'es2020',
+      target: "esnext",
     },
   },
 }));
